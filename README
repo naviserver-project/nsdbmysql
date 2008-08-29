@@ -1,0 +1,39 @@
+MySQL database driver for NaviServer 4.x
+Release 0.9
+vlad@crystalballinc.com
+
+This is NaviServer module for database driver to access 
+MySQL databases(http://www.mysql.com).
+
+The driver is based on nsmysql from Aolserver 4.5 by 
+Dossy Shiobara <dossy@panoptic.com>
+
+/*--------------------------------------------------------------------*/
+
+
+Compiling and Installing
+
+To compile this driver, you'll need to have MySQL installed.
+By default /usr/include/mysql is used for headers, if mysql was installed
+in other place, change Makefile to reflect that
+
+
+Configuration
+
+ns_section      "ns/db/drivers"
+ns_param        mysql                   nsdbmysql.so
+
+ns_section      "ns/db/pools"
+ns_param        mysql                   "Mysql"
+
+ns_section      "ns/db/pool/mysql"
+ns_param        driver                  mysql
+ns_param        connections             10
+ns_param        user                    mysql
+ns_param        password                passwd
+ns_param        datasource              host:3306:database_name
+ns_param        verbose                 off
+  
+Authors
+     Dossy Shiobara dossy@panoptic.com
+     Vlad Seryakov vlad@crystalballinc.com
