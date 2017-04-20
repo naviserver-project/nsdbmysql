@@ -69,6 +69,8 @@ static void     InitThread(void);
 static Ns_TlsCleanup CleanupThread;
 static Ns_Callback AtExit;
 
+NS_EXPORT NsDb_DriverInitProc Ns_DbDriverInit;
+
 static Ns_Tls tls;                  /* For the thread exit callback. */
 static int include_tablenames = 0;  /* Include tablename in resultset. */
 
@@ -94,7 +96,7 @@ static Ns_DbProc mysqlProcs[] = {
 NS_EXPORT int   Ns_ModuleVersion = 1;
 
 NS_EXPORT int
-Ns_DbDriverInit(char *driver, char *path)
+Ns_DbDriverInit(const char *driver, const char *path)
 {
     static int once = 0;
 

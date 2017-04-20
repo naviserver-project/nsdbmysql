@@ -11,7 +11,7 @@ MOD       =  nsdbmysql.so
 #
 # Objects to build.
 #
-OBJS      =  nsdbmysql.o
+MODOBJS      =  nsdbmysql.o
 
 #
 # Header files in THIS directory
