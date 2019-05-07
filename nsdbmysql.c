@@ -31,8 +31,6 @@
  *
  */
 
-static const char     *RCSID = "$Id$";
-
 #include "ns.h"
 #include "nsdb.h"
 
@@ -68,6 +66,7 @@ static void     Log(Ns_DbHandle *handle, MYSQL *mysql);
 static void     InitThread(void);
 static Ns_TlsCleanup CleanupThread;
 static Ns_Callback AtExit;
+static Ns_TclTraceProc DbInterpInit;
 
 NS_EXPORT NsDb_DriverInitProc Ns_DbDriverInit;
 
@@ -76,19 +75,19 @@ static int include_tablenames = 0;  /* Include tablename in resultset. */
 
 
 static Ns_DbProc mysqlProcs[] = {
-    { DbFn_Name,         (void *) DbName },
-    { DbFn_DbType,       (void *) DbType },
-    { DbFn_ServerInit,   (void *) DbServerInit },
-    { DbFn_OpenDb,       (void *) DbOpenDb },
-    { DbFn_CloseDb,      (void *) DbCloseDb },
-    { DbFn_DML,          (void *) DbDML },
-    { DbFn_Select,       (void *) DbSelect },
-    { DbFn_GetRow,       (void *) DbGetRow },
-    { DbFn_GetRowCount,  (void *) DbGetRowCount },
-    { DbFn_Flush,        (void *) DbFlush },
-    { DbFn_Cancel,       (void *) DbCancel },
-    { DbFn_Exec,         (void *) DbExec },
-    { DbFn_BindRow,      (void *) DbBindRow },
+    { DbFn_Name,         (ns_funcptr_t) DbName },
+    { DbFn_DbType,       (ns_funcptr_t) DbType },
+    { DbFn_ServerInit,   (ns_funcptr_t) DbServerInit },
+    { DbFn_OpenDb,       (ns_funcptr_t) DbOpenDb },
+    { DbFn_CloseDb,      (ns_funcptr_t) DbCloseDb },
+    { DbFn_DML,          (ns_funcptr_t) DbDML },
+    { DbFn_Select,       (ns_funcptr_t) DbSelect },
+    { DbFn_GetRow,       (ns_funcptr_t) DbGetRow },
+    { DbFn_GetRowCount,  (ns_funcptr_t) DbGetRowCount },
+    { DbFn_Flush,        (ns_funcptr_t) DbFlush },
+    { DbFn_Cancel,       (ns_funcptr_t) DbCancel },
+    { DbFn_Exec,         (ns_funcptr_t) DbExec },
+    { DbFn_BindRow,      (ns_funcptr_t) DbBindRow },
     { 0, NULL }
 };
 
@@ -116,8 +115,8 @@ Ns_DbDriverInit(const char *driver, const char *path)
             return NS_ERROR;
         }
         Ns_TlsAlloc(&tls, CleanupThread);
-        Ns_RegisterAtExit(AtExit, NULL);
-        Ns_RegisterProcInfo(AtExit, "dbimy:cleanshutdown", NULL);
+        Ns_RegisterAtExit((ns_funcptr_t)AtExit, NULL);
+        Ns_RegisterProcInfo((ns_funcptr_t)AtExit, "dbimy:cleanshutdown", NULL);
     }
 
     if (Ns_DbRegisterDriver(driver, &(mysqlProcs[0])) != NS_OK) {
@@ -336,7 +335,7 @@ DbGetRow(Ns_DbHandle *handle, Ns_Set *row)
     }
 
     if (numcols != Ns_SetSize(row)) {
-        Ns_Log(Error, "DbGetRow: Number of columns in row (%d)"
+        Ns_Log(Error, "DbGetRow: Number of columns in row (%ld)"
                       " not equal to number of columns in row fetched (%d).",
                       Ns_SetSize(row), numcols);
         mysql_free_result((MYSQL_RES *) handle->statement);
@@ -581,13 +580,13 @@ DbList_Tables(Tcl_Interp *interp, const char *wild, Ns_DbHandle *handle)
  */
 
 static int
-DbCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[])
+DbCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj * const objv[])
 {
     Ns_DbHandle    *handle;
     char           *wild;
     int             rc;
 
-    static CONST char *opts[] = {
+    static const char *opts[] = {
         "include_tablenames", "list_dbs", "list_tables",
         "resultrows", "select_db", "insert_id", "version",
         NULL
@@ -679,7 +678,7 @@ DbCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[])
     return TCL_OK;
 }
 
-static int DbInterpInit(Tcl_Interp * interp, void *ignored)
+static int DbInterpInit(Tcl_Interp * interp, const void *ignored)
 {
     Tcl_CreateObjCommand(interp, "ns_mysql", DbCmd, NULL, NULL);
     return NS_OK;

@@ -27,6 +27,6 @@ MODLIBS  =  -lmysqlclient_r
 # Compiler flags
 #
 CFLAGS   = -I/usr/include/mysql
-
+#CFLAGS   = -I/opt/local/include/mysql57/mysql/
 
 include  $(NAVISERVER)/include/Makefile.module
