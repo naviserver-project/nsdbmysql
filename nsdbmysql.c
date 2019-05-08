@@ -48,22 +48,21 @@ extern void my_thread_end(void);
 #define MAX_ERROR_MSG	1024
 #define MAX_IDENTIFIER	1024
 
-static char    *DbName(void);
-static char    *DbType(Ns_DbHandle *handle);
-static int      DbServerInit(char *hServer, char *hModule, char *hDriver);
-static int      DbOpenDb(Ns_DbHandle *handle);
-static int      DbCloseDb(Ns_DbHandle *handle);
-static int      DbDML(Ns_DbHandle *handle, char *sql);
-static Ns_Set  *DbSelect(Ns_DbHandle *handle, char *sql);
-static int      DbGetRow(Ns_DbHandle *handle, Ns_Set *row);
-static int      DbGetRowCount(Ns_DbHandle *handle);
-static int      DbFlush(Ns_DbHandle *handle);
-static int      DbCancel(Ns_DbHandle *handle);
-static int      DbExec(Ns_DbHandle *handle, char *sql);
-static Ns_Set  *DbBindRow(Ns_DbHandle *handle);
+static const char *DbType(Ns_DbHandle *handle);
+static int         DbServerInit(const char *server, const char *module, const char *driver);
+static int         DbOpenDb(Ns_DbHandle *handle);
+static int         DbCloseDb(Ns_DbHandle *handle);
+static int         DbDML(Ns_DbHandle *handle, char *sql);
+static Ns_Set     *DbSelect(Ns_DbHandle *handle, char *sql);
+static int         DbGetRow(Ns_DbHandle *handle, Ns_Set *row);
+static int         DbGetRowCount(Ns_DbHandle *handle);
+static int         DbFlush(Ns_DbHandle *handle);
+static int         DbCancel(Ns_DbHandle *handle);
+static int         DbExec(Ns_DbHandle *handle, char *sql);
+static Ns_Set     *DbBindRow(Ns_DbHandle *handle);
 
-static void     Log(Ns_DbHandle *handle, MYSQL *mysql);
-static void     InitThread(void);
+static void        Log(Ns_DbHandle *handle, MYSQL *mysql);
+static void        InitThread(void);
 static Ns_TlsCleanup CleanupThread;
 static Ns_Callback AtExit;
 static Ns_TclTraceProc DbInterpInit;
@@ -75,7 +74,7 @@ static int include_tablenames = 0;  /* Include tablename in resultset. */
 
 
 static Ns_DbProc mysqlProcs[] = {
-    { DbFn_Name,         (ns_funcptr_t) DbName },
+    { DbFn_Name,         (ns_funcptr_t) DbType },
     { DbFn_DbType,       (ns_funcptr_t) DbType },
     { DbFn_ServerInit,   (ns_funcptr_t) DbServerInit },
     { DbFn_OpenDb,       (ns_funcptr_t) DbOpenDb },
@@ -95,7 +94,7 @@ static Ns_DbProc mysqlProcs[] = {
 NS_EXPORT int   Ns_ModuleVersion = 1;
 
 NS_EXPORT int
-Ns_DbDriverInit(const char *driver, const char *path)
+Ns_DbDriverInit(const char *driver, const char *UNUSED(path))
 {
     static int once = 0;
 
@@ -115,8 +114,8 @@ Ns_DbDriverInit(const char *driver, const char *path)
             return NS_ERROR;
         }
         Ns_TlsAlloc(&tls, CleanupThread);
-        Ns_RegisterAtExit((ns_funcptr_t)AtExit, NULL);
-        Ns_RegisterProcInfo((ns_funcptr_t)AtExit, "dbimy:cleanshutdown", NULL);
+        Ns_RegisterAtExit(AtExit, NULL);
+        Ns_RegisterProcInfo((ns_funcptr_t)AtExit, "nsdbmysql:cleanshutdown", NULL);
     }
 
     if (Ns_DbRegisterDriver(driver, &(mysqlProcs[0])) != NS_OK) {
@@ -126,15 +125,8 @@ Ns_DbDriverInit(const char *driver, const char *path)
     return NS_OK;
 }
 
-static char *
-DbName(void)
-{
-    return "mysql";
-}
-
-
-static char *
-DbType(Ns_DbHandle *handle)
+static const char *
+DbType(Ns_DbHandle *UNUSED(handle))
 {
     return "mysql";
 }
@@ -148,7 +140,7 @@ DbOpenDb(Ns_DbHandle *handle)
     char            *database = NULL;
     char            *port = NULL;
     char            *unix_port = NULL;
-    unsigned int    tcp_port = 0;
+    unsigned int    tcp_port = 0u;
 
     if (handle == NULL || handle->datasource == NULL) {
         Ns_Log(Error, "nsdbmysql: Invalid connection.");
@@ -176,7 +168,7 @@ DbOpenDb(Ns_DbHandle *handle)
     if (port[0] == '/') {
         unix_port = port;
     } else {
-        tcp_port = atoi(port);
+        tcp_port = (unsigned int) strtol(port, NULL, 10);
     }
 
     dbh = mysql_init(NULL);
@@ -248,7 +240,7 @@ DbSelect(Ns_DbHandle *handle, char *sql)
     MYSQL_RES      *result;   
     MYSQL_FIELD    *fields;
     int             rc;
-    unsigned int    i;
+    size_t          i;
     unsigned int    numcols;
     Ns_DString     key;
 
@@ -284,7 +276,7 @@ DbSelect(Ns_DbHandle *handle, char *sql)
     numcols = mysql_num_fields((MYSQL_RES *) handle->statement);
     Log(handle, (MYSQL *) handle->connection);
 
-    if (numcols == 0) {
+    if (numcols == 0u) {
         Ns_Log(Error, "DbSelect(%s):  Query did not return rows:  %s", handle->datasource, sql);
         mysql_free_result((MYSQL_RES *) handle->statement);
         handle->statement = NULL;
@@ -314,8 +306,8 @@ static int
 DbGetRow(Ns_DbHandle *handle, Ns_Set *row)
 {
     MYSQL_ROW       my_row;
-    int             i;
-    int             numcols;
+    size_t          i;
+    unsigned int    numcols;
 
     if (handle->fetchingRows == NS_FALSE) {
         Ns_Log(Error, "DbGetRow(%s):  No rows waiting to fetch.", handle->datasource);
@@ -371,7 +363,7 @@ DbGetRowCount(Ns_DbHandle *handle)
     if (handle != NULL && handle->connection != NULL) {
         InitThread();
 
-        return mysql_affected_rows((MYSQL *) handle->connection);
+        return (int)mysql_affected_rows((MYSQL *) handle->connection);
     }
     return NS_ERROR;
 }
@@ -580,7 +572,7 @@ DbList_Tables(Tcl_Interp *interp, const char *wild, Ns_DbHandle *handle)
  */
 
 static int
-DbCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj * const objv[])
+DbCmd(ClientData UNUSED(arg), Tcl_Interp *interp, int objc, Tcl_Obj * const objv[])
 {
     Ns_DbHandle    *handle;
     char           *wild;
@@ -609,9 +601,9 @@ DbCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj * const objv[])
         return TCL_ERROR;
     }
 
-    if (!STREQ(Ns_DbDriverName(handle), DbName())) {
+    if (!STREQ(Ns_DbDriverName(handle), DbType(0))) {
         Tcl_AppendResult(interp, "handle \"", Tcl_GetString(objv[2]),
-                "\" is not of type \"", DbName(), "\"", NULL);
+                "\" is not of type \"", DbType(0), "\"", NULL);
         return TCL_ERROR;
     }
 
@@ -678,15 +670,15 @@ DbCmd(ClientData arg, Tcl_Interp *interp, int objc, Tcl_Obj * const objv[])
     return TCL_OK;
 }
 
-static int DbInterpInit(Tcl_Interp * interp, const void *ignored)
+static int DbInterpInit(Tcl_Interp * interp, const void *UNUSED(ignored))
 {
     Tcl_CreateObjCommand(interp, "ns_mysql", DbCmd, NULL, NULL);
     return NS_OK;
 }
 
-static int DbServerInit(char *hServer, char *hModule, char *hDriver)
+static int DbServerInit(const char *server, const char *UNUSED(module), const char *UNUSED(driver))
 {
-    Ns_TclRegisterTrace(hServer, DbInterpInit, NULL, NS_TCL_TRACE_CREATE);
+    Ns_TclRegisterTrace(server, DbInterpInit, NULL, NS_TCL_TRACE_CREATE);
     return NS_OK;
 }
 
@@ -777,8 +769,17 @@ CleanupThread(void *arg)
  */
 
 static void
-AtExit(void *arg)
+AtExit(void *UNUSED(arg))
 {
     Ns_Log(Debug, "nsdbmysql: AtExit");
     mysql_library_end();
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * indent-tabs-mode: nil
+ * End:
+ */

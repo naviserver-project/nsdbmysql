@@ -15,25 +15,27 @@ Compiling and Installing
 
 To compile this driver, you'll need to have MySQL installed.
 By default /usr/include/mysql is used for headers, if mysql was installed
-in other place, change Makefile to reflect that
+in other place, change Makefile to reflect that.
 
 
 Configuration
 
-ns_section      "ns/db/drivers"
+###############################################################
+ns_section      ns/db/drivers
 ns_param        mysql                   nsdbmysql.so
 
-ns_section      "ns/db/pools"
-ns_param        mysql                   "Mysql"
+ns_section      ns/db/pools
+ns_param        mysql                   "MySQL"
 
-ns_section      "ns/db/pool/mysql"
+ns_section      ns/db/pool/mysql
 ns_param        driver                  mysql
 ns_param        connections             10
 ns_param        user                    mysql
 ns_param        password                passwd
 ns_param        datasource              host:3306:database_name
 ns_param        verbose                 off
-  
+###############################################################
+
 Authors
      Dossy Shiobara dossy@panoptic.com
      Vlad Seryakov vlad@crystalballinc.com
