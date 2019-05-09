@@ -16,8 +16,8 @@ MYSQLLIBRARY =
 #
 # On macOS: port install mysql57
 #
-MYSQLINCLUDE = -I/opt/local/include/mysql57/mysql/
-MYSQLLIBRARY = -L/opt/local/lib/mysql57/mysql
+# MYSQLINCLUDE = -I/opt/local/include/mysql57/mysql/
+# MYSQLLIBRARY = -L/opt/local/lib/mysql57/mysql
 
 #
 # Module name
