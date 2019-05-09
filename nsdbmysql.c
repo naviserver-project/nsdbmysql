@@ -619,7 +619,8 @@ DbCmd(ClientData UNUSED(arg), Tcl_Interp *interp, int objc, Tcl_Obj * const objv
         break;
 
     case IInsertIdIdx:
-        Tcl_SetObjResult(interp, Tcl_NewLongObj(mysql_insert_id((MYSQL *) handle->connection)));
+        Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)mysql_insert_id((MYSQL *) handle->connection)));
+
         break;
 
     case IListDbsIdx:
@@ -647,7 +648,7 @@ DbCmd(ClientData UNUSED(arg), Tcl_Interp *interp, int objc, Tcl_Obj * const objv
         return DbList_Tables(interp, wild, handle);
 
     case IResultRowsIdx:
-        Tcl_SetObjResult(interp, Tcl_NewLongObj(mysql_affected_rows((MYSQL *) handle->connection)));
+        Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)mysql_affected_rows((MYSQL *) handle->connection)));
         break;
 
     case ISelectDbIdx:
@@ -731,7 +732,7 @@ InitThread(void)
 {
     int initialised;
 
-    initialised = (int) Ns_TlsGet(&tls);
+    initialised = PTR2INT(Ns_TlsGet(&tls));
     if (!initialised) {
         Ns_TlsSet(&tls, (void *) NS_TRUE);
         Ns_Log(Debug, "nsdbmysql: InitThread");
@@ -742,7 +743,7 @@ InitThread(void)
 static void
 CleanupThread(void *arg)
 {
-    int initialised = (int) arg;
+    int initialised = PTR2INT(arg);
 
     if (initialised) {
         Ns_Log(Debug, "nsdbmysql: CleanupThread");
