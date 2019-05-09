@@ -730,10 +730,10 @@ Log(Ns_DbHandle *handle, MYSQL *mysql)
 static void
 InitThread(void)
 {
-    int initialised;
+    int initialized;
 
-    initialised = PTR2INT(Ns_TlsGet(&tls));
-    if (!initialised) {
+    initialized = PTR2INT(Ns_TlsGet(&tls));
+    if (!initialized) {
         Ns_TlsSet(&tls, (void *) NS_TRUE);
         Ns_Log(Debug, "nsdbmysql: InitThread");
         mysql_thread_init();
@@ -743,9 +743,9 @@ InitThread(void)
 static void
 CleanupThread(void *arg)
 {
-    int initialised = PTR2INT(arg);
+    int initialized = PTR2INT(arg);
 
-    if (initialised) {
+    if (initialized) {
         Ns_Log(Debug, "nsdbmysql: CleanupThread");
         mysql_thread_end();
     }
