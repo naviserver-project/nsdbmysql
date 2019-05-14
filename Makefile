@@ -4,14 +4,20 @@ ifndef NAVISERVER
 endif
 
 #
-# For Debian/Ubuntu:
+# Install MySQL client library on Debian/Ubuntu:
 #      apt install libmysqlclient-dev
-# installs into
+#
+# This installs essentially the following files
 #      /usr/include/mysql/mysql.h
 #      /usr/lib/x86_64-linux-gnu/libmysqlclient.so
 #
-MYSQLINCLUDE = -I/usr/include/mysql
-MYSQLLIBRARY =
+# Typically, MySQL installs also a script called "mysql_config", which
+# can be used to determine the include and library paths
+# automatically. If this is not available on your system you have to
+# set the paths manually like in the example below for macOS.
+#
+MYSQLINCLUDE = $(shell mysql_config --include)
+MYSQLLIBRARY = $(shell mysql_config --libs)
 
 #
 # On macOS: port install mysql57
