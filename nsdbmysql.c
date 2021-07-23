@@ -671,13 +671,13 @@ DbCmd(ClientData UNUSED(arg), Tcl_Interp *interp, int objc, Tcl_Obj * const objv
     return TCL_OK;
 }
 
-static int DbInterpInit(Tcl_Interp * interp, const void *UNUSED(ignored))
+static Ns_ReturnCode DbInterpInit(Tcl_Interp * interp, const void *UNUSED(ignored))
 {
     Tcl_CreateObjCommand(interp, "ns_mysql", DbCmd, NULL, NULL);
     return NS_OK;
 }
 
-static int DbServerInit(const char *server, const char *UNUSED(module), const char *UNUSED(driver))
+static Ns_ReturnCode DbServerInit(const char *server, const char *UNUSED(module), const char *UNUSED(driver))
 {
     Ns_TclRegisterTrace(server, DbInterpInit, NULL, NS_TCL_TRACE_CREATE);
     return NS_OK;
