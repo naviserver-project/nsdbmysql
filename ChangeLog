@@ -1,119 +1,87 @@
-2008-08-28  Vlad Seryakov <seryakov@users.sf.net>
+commit 8b1a7e0db62f48f0e56e73b2f4484208ea1de252
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2021-07-23
 
-        * imported into Naviserver repository and updated with new API
+    modernize code
 
-2005-10-06  Nathan Folkman  <shmooved@aol.com>
+M	nsdbmysql.c
 
-    * mysql.c: Fixed an issue where the MySQL error code was not
-    properly being set. Fix allows you to properly use the
-    ns_db exception command:
+commit 38e23496034cb88601192f7f6af666fa5c167e0b
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-14
 
-    set exception [ns_db exception $handle]
-    set errorCode [lindex $exception 0]
-    set errorInfo [lindex $exception 1]
+    ease compilation under Linuxes further my using mysql_config
 
-    This could pose a backwards compatibility issue since the previous
-    version of this code was hard coded to always return the string
-    "Error" as the exception code.
+M	Makefile
 
+commit 26b740d0cdbec3327ef587ba2e8b0ea5fbef97ad
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-09
 
-2003-07-09  Elizabeth Thomas  <eathomas93@aol.com>
+    prefer US spelling
 
-    * mysql.c: add include of nsdb.h for aolserver 4.0 compatibility. 
-    aolserver pre-4.0 users should use tags prior to nsmysql_v1
+M	nsdbmysql.c
 
-    * Tagged: nsmysql_v1
+commit 88c7bf7d72104226ae42e55870cdf507b3214c66
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-09
 
-2003-07-09  Elizabeth Thomas  <eathomas93@aol.com>
+    improve type cleanness
 
-    * Makefile: add variables which can control behavior of make without
-    requiring edits to the file
+M	nsdbmysql.c
 
-    * Tagged: nsmysql_v0_7
+commit ceea1fc1c8a552f2694e15548c3d738cc95c7855
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-09
 
-2001-10-18  Dossy  <dossy@panoptic.com>
+    prefer per default Linux settings
 
-    * mysql.c: removed use of mutex.  Switched to using libmysqlclient_r
-    which is thread safe, and since we use db connection pools (no two
-    threads share the same connection) even mysql_real_connect() needs
-    no mutex.  Thanks to Ian Fink <ifink@wayport.net> for inspiring
-    me to finally make this change.
+M	Makefile
 
-    * mysql.c: changed Tcl_DStrings to Ns_DStrings, thanks to Ian
-    Fink.
+commit dbf71d69a274a39b5ac85afb44a1182da9d91bb3
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-08
 
-    * mysql.c: improved parsing of handle->datasource.  Thanks to
-    Ian Fink for ideas.
+    improve cleanness of compilation, when more compiler warning flags are activated
 
-2001-02-17  Dossy  <dossy@panoptic.com>
+M	Makefile
+M	README
+M	nsdbmysql.c
 
-    * mysql.c: updated mysql.c Ns_MySQL_BindRow() and Ns_MySQL_Select()
-    to include the table name as part of the key of the ns_set resultset.
+commit b2f79a14864c065c2085b5f8d5da49481c71f997
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-08
 
-    * mysql.c: updated mysql.c with new [ns_mysql include_tablenames] feature
+    Ease compilation: provide configuration variables, add comments
 
-    * README: updated README about libz and pointed FAQ at the wiki
+M	Makefile
 
-    * Makefile: updated Makefile with stuff about maybe needing -lz for libz
+commit 0303570148cebdaf9ea212b1478dc041abb1fa4d
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2019-05-07
 
-2000-08-31  Dossy  <dossy@panoptic.com>
+    update to current snapshot of NaviServer
 
-	* mysql.c:
-	MSVC++ didn't appreciate "unsigned long long", so I #ifdef WIN32
-	and use "unsigned __int64" which it likes.
+M	Makefile
+M	nsdbmysql.c
 
-	* win32/README, win32/nsmysql.dsp, win32/nsmysql.dsw: New file.
+commit 26fff4fdbe7434fc59fd9505b85a68830e7cb340
+Author: Gustaf Neumann <neumann@wu-wien.ac.at>
+Date:   2017-04-20
 
-	* README: Minor updates for v0.4.
+    - Use NsDb_DriverInitProc as prototype (requires actual version of NaviServer)
 
-	* mysql.c: added [ns_mysql resultrows] which returns the number of rows
-	affected by the previous query.
+M	Makefile
+M	nsdbmysql.c
 
-	Fixed the bug in Ns_MySQL_Exec() where mysql_store_result()
-	returns NULL, but the query did not error (as is in the case
-	of some DML statements).  I thought this was fixed in v0.3,
-	but I still didn't get it right.  (Thanks to Thomas Park
-	<thomas@sombasa.com> for the bug report and patches.)
+commit bf333d390227958c1cd0d17dd67c9df040525d6f
+Author: Vlad Seryakov <vlad@crystalballinc.com>
+Date:   2008-08-29
 
-2000-06-02  Dossy  <dossy@panoptic.com>
+    Initial revision
 
-	* mysql.c:
-	Added mysql_field_count() check in Ns_MySQL_Exec() for the special
-	case where mysql_store_result() returns NULL (no rows returned) but
-	it is not an error (in the case of DML).
-	(Thanks to Midh Mulpuri <midh@PURDUE.EDU> for this bug report and fix.)
-
-	Big fix:  Use of Ns_MutexLock() and Ns_MutexUnlock() to make the driver
-	thread-safe.  Also, moved calling of mysql_init() to the right place
-	and now call it in a thread-safe manner as well.
-	(Thanks to Jack Hong <hong@staff.sina.com> for this bug report and
-	testing assistance.)
-
-2000-03-28  Dossy  <dossy@panoptic.com>
-
-	* mysql.c:
-	mysql_num_fields() was being passed handle->connection incorrectly,
-	should have been the MYSQL_RES structure.
-
-	snprintf() replaced with sprintf() for win32 compatibility
-
-	* Makefile: New Makefile convention for AOLserver 3.0rc1.
-
-2000-03-20  Dossy  <dossy@panoptic.com>
-
-	* Makefile, makefile: MYSQL_PREFIX/_LIBDIR/_INCDIR changes
-	obsoleted $srcdir/third directory structure
-
-	* Makefile, makefile, README: New file.
-
-2000-01-20  Dossy  <dossy@panoptic.com>
-
-	* mysql.c: Revised makefile to no longer use $(THIRD) directory,
-	instead, MYSQL_PREFIX needs to be set in makefile.
-	Added ns_mysql commands: list_dbs, list_tables, select_db.
-
-2000-01-13  Dossy  <dossy@panoptic.com>
-
-	* mysql.c: Initial revision.  Basic functionality implemented, with
-	minimal testing performed.
-
+A	ChangeLog
+A	LICENSE
+A	Makefile
+A	README
+A	nsdbmysql.c
