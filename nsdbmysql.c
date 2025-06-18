@@ -242,7 +242,7 @@ DbSelect(Ns_DbHandle *handle, char *sql)
     int             rc;
     size_t          i;
     unsigned int    numcols;
-    Ns_DString     key;
+    Tcl_DString    key;
 
     if (sql == NULL) {
         Ns_Log(Error, "nsdbmysql: no sql.");
@@ -288,15 +288,15 @@ DbSelect(Ns_DbHandle *handle, char *sql)
     fields = mysql_fetch_fields((MYSQL_RES *) handle->statement);
 
     for (i = 0; i < numcols; i++) {
-        Ns_DStringInit(&key);
+        Tcl_DStringInit(&key);
 
         if (include_tablenames && strlen(fields[i].table) > 0) {
             Ns_DStringVarAppend(&key, fields[i].table, ".", NULL);
         }
 
-        Ns_DStringAppend(&key, fields[i].name);
+        Tcl_DStringAppend(&key, fields[i].name, TCL_INDEX_NONE);
         Ns_SetPut((Ns_Set *) handle->row, Ns_DStringValue(&key), NULL);
-        Ns_DStringFree(&key);
+        Tcl_DStringFree(&key);
     }
 
     return (Ns_Set *) handle->row;
@@ -462,7 +462,7 @@ DbBindRow(Ns_DbHandle *handle)
     MYSQL_FIELD    *fields;
     unsigned int    i;
     unsigned int    numcols;
-    Ns_DString     key;
+    Tcl_DString    key;
 
     if (handle == NULL || handle->statement == NULL) {
         Ns_Log(Error, "nsdbmysql: Invalid connection.");
@@ -476,15 +476,15 @@ DbBindRow(Ns_DbHandle *handle)
     fields = mysql_fetch_fields((MYSQL_RES *) handle->statement);
 
     for (i = 0; i < numcols; i++) {
-        Ns_DStringInit(&key);
+        Tcl_DStringInit(&key);
 
         if (include_tablenames && strlen(fields[i].table) > 0) {
             Ns_DStringVarAppend(&key, fields[i].table, ".", NULL);
         }
 
-        Ns_DStringAppend(&key, fields[i].name);
+        Tcl_DStringAppend(&key, fields[i].name, TCL_INDEX_NONE);
         Ns_SetPut((Ns_Set *) handle->row, Ns_DStringValue(&key), NULL);
-        Ns_DStringFree(&key);
+        Tcl_DStringFree(&key);
     }
 
     return (Ns_Set *) handle->row;
@@ -697,8 +697,8 @@ Log(Ns_DbHandle *handle, MYSQL *mysql)
 
         if (handle != NULL) {
             sprintf(handle->cExceptionCode, "%u", nErr);
-            Ns_DStringFree(&(handle->dsExceptionMsg));
-            Ns_DStringAppend(&(handle->dsExceptionMsg), msg);
+            Tcl_DStringFree(&(handle->dsExceptionMsg));
+            Tcl_DStringAppend(&(handle->dsExceptionMsg, TCL_INDEX_NONE), msg);
         }
     }
 }
