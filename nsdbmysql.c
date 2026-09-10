@@ -698,7 +698,7 @@ Log(Ns_DbHandle *handle, MYSQL *mysql)
         if (handle != NULL) {
             sprintf(handle->cExceptionCode, "%u", nErr);
             Tcl_DStringFree(&(handle->dsExceptionMsg));
-            Tcl_DStringAppend(&(handle->dsExceptionMsg, TCL_INDEX_NONE), msg);
+            Tcl_DStringAppend(&handle->dsExceptionMsg, msg, TCL_INDEX_NONE);
         }
     }
 }
