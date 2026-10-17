@@ -237,7 +237,7 @@ DbDML(Ns_DbHandle *handle, char *sql)
 static Ns_Set  *
 DbSelect(Ns_DbHandle *handle, char *sql)
 {
-    MYSQL_RES      *result;   
+    MYSQL_RES      *result;
     MYSQL_FIELD    *fields;
     int             rc;
     size_t          i;
@@ -418,6 +418,17 @@ DbExec(Ns_DbHandle *handle, char *sql)
 
     InitThread();
 
+    /*
+     * Discard any unread result from the previous statement before
+     * executing another query on this handle. Otherwise assigning the
+     * next result to handle->statement would lose the previous MYSQL_RES.
+     *
+     * DbFlush() also initializes MySQL state for the current thread.
+     */
+    if (DbFlush(handle) != NS_OK) {
+        return NS_ERROR;
+    }
+
     rc = mysql_query((MYSQL *) handle->connection, sql);
     Log(handle, (MYSQL *) handle->connection);
 
@@ -432,12 +443,12 @@ DbExec(Ns_DbHandle *handle, char *sql)
     Log(handle, (MYSQL *) handle->connection);
 
     if (result == NULL) {
-    	if (fieldcount == 0) {	
-    	    return NS_DML;
-    	} else {
-    	    Ns_Log(Error, "nsdbmysql: DbExec() has columns but result set is NULL");
-    	    return NS_ERROR;
-    	}
+        if (fieldcount == 0) {
+            return NS_DML;
+        } else {
+            Ns_Log(Error, "nsdbmysql: DbExec() has columns but result set is NULL");
+            return NS_ERROR;
+        }
     }
 
     numcols = mysql_num_fields(result);
@@ -492,7 +503,7 @@ DbBindRow(Ns_DbHandle *handle)
 
 /* ************************************************************ */
 
-static int 
+static int
 DbList_Dbs(Tcl_Interp *interp, const char *wild, Ns_DbHandle *handle)
 {
     MYSQL_RES      *result;
@@ -528,7 +539,7 @@ DbList_Dbs(Tcl_Interp *interp, const char *wild, Ns_DbHandle *handle)
     return TCL_OK;
 }
 
-static int 
+static int
 DbList_Tables(Tcl_Interp *interp, const char *wild, Ns_DbHandle *handle)
 {
     MYSQL_RES      *result;
@@ -667,7 +678,7 @@ DbCmd(ClientData UNUSED(arg), Tcl_Interp *interp, int objc, Tcl_Obj * const objv
         Tcl_AppendResult(interp, "mysql", mysql_get_server_info((MYSQL *) handle->connection), NULL);
         return TCL_OK;
     }
-    
+
     return TCL_OK;
 }
 
